@@ -185,6 +185,86 @@ To run on your ChatGPT Plus or Pro plan instead of an API key, choose "Subscript
 
 For AWS Bedrock, install the extra with `pip install ".[bedrock]"`, set `llm_provider: "bedrock"`, configure AWS credentials (environment variables, `~/.aws/credentials`, or an IAM role) and `AWS_DEFAULT_REGION`, and use a Bedrock model ID, e.g. `us.anthropic.claude-opus-5-5`.
 
+#### SAP AI Core: GPT-6.1 Sol
+
+Install SAP support from the repository root:
+
+```bash
+python -m pip install --upgrade ".[sap_ai_core]"
+```
+
+Use the same Python environment to install and run TradingAgents. SAP support
+requires `sap-ai-sdk-gen>=7.4.1,<8`. Older SDKs (including 5.9.0) do not route
+Responses API requests through SAP's deployment wrapper and can fail with
+`TypeError: Responses.create() got an unexpected keyword argument 'deployment_id'`.
+To upgrade an existing SDK installation:
+
+```bash
+python -m pip install --upgrade "sap-ai-sdk-gen[amazon]>=7.4.1,<8"
+```
+
+Supply your SAP AI Core service-key credentials and resource group through the
+environment, then select `gpt-6.1-sol` for both model tiers:
+
+```bash
+export AICORE_CLIENT_ID="<service-key clientid>"
+export AICORE_CLIENT_SECRET="<service-key clientsecret>"
+export AICORE_AUTH_URL="<service-key url>/oauth/token"
+export AICORE_BASE_URL="<service-key serviceurls.AI_API_URL>/v2"
+export AICORE_RESOURCE_GROUP="<your resource group>"
+
+export TRADINGAGENTS_LLM_PROVIDER=sap_ai_core
+export TRADINGAGENTS_QUICK_THINK_LLM=gpt-6.1-sol
+export TRADINGAGENTS_DEEP_THINK_LLM=gpt-6.1-sol
+
+python -m cli.main
+```
+
+`gpt-6-astra` is also available in the SAP model picker for both tiers. To use it,
+set `TRADINGAGENTS_QUICK_THINK_LLM` and/or `TRADINGAGENTS_DEEP_THINK_LLM` to
+`gpt-6-astra`. It requires an active deployment in your resource group as well.
+
+Use complete URLs, adding `/oauth/token` and `/v2` only if they are not already
+present. The SAP SDK handles OAuth token refresh and finds the deployment by its
+model name. An active `gpt-6.1-sol` deployment must be available in your resource
+group; offering the name in the CLI does not provision it or establish account
+availability. GPT-6 models use the Responses API so reasoning effort and function
+tools can be combined; older/custom model names use Chat Completions. The
+deployment must support the corresponding API and tool calling.
+No `OPENAI_API_KEY` is required. Leave `TRADINGAGENTS_LLM_BACKEND_URL` unset:
+the service endpoint comes from `AICORE_BASE_URL`.
+
+For Python usage, set the same SAP credential variables and update your config:
+
+```python
+from tradingagents.default_config import DEFAULT_CONFIG
+
+config = DEFAULT_CONFIG.copy()
+config.update({
+    "llm_provider": "sap_ai_core",
+    "quick_think_llm": "gpt-6.1-sol",
+    "deep_think_llm": "gpt-6.1-sol",
+    "backend_url": None,
+    "quick_think_provider": None,
+    "deep_think_provider": None,
+    "quick_think_backend_url": None,
+    "deep_think_backend_url": None,
+})
+```
+
+`openai_reasoning_effort` and `max_tokens` are forwarded to the SAP chat client
+when configured. SAP requests retry temporary capacity/rate-limit errors (HTTP
+429) up to **6 times** by default. Waiting honors `Retry-After` (seconds or an
+HTTP date) and `retry-after-ms`; otherwise delays grow from 10 to 120 seconds,
+with jitter (roughly 6–7 minutes total). Each wait logs the retry count and delay.
+Set `TRADINGAGENTS_LLM_MAX_RETRIES` (or `llm_max_retries` in Python) to change the
+retry budget; `0` disables retries. This is a single application-owned budget,
+with SDK retries disabled. Connection errors, HTTP 408/409, and server errors
+also use this budget; authentication and exhausted billing/quota errors propagate
+immediately. After the budget is exhausted, the last error propagates. You can
+interrupt a wait with Ctrl+C. See the
+[SAP Python SDK documentation](https://help.sap.com/doc/generative-ai-hub-sdk/CLOUD/en-US/_reference/gen_ai_hub.html).
+
 For local models, configure Ollama with `llm_provider: "ollama"`. The default endpoint is `http://localhost:11434/v1`; set `OLLAMA_BASE_URL` to point at a remote `ollama-serve`. Pull models with `ollama pull <name>`, and pick "Custom model ID" in the CLI for any model not listed by default.
 
 For any other OpenAI-compatible server (vLLM, LM Studio, llama.cpp, or a custom relay), use `llm_provider: "openai_compatible"` and set the endpoint via `backend_url` (or `TRADINGAGENTS_LLM_BACKEND_URL`), e.g. `http://localhost:8000/v1` for vLLM or `http://localhost:1234/v1` for LM Studio. The model is whatever your server serves. No key is needed for local servers; set `OPENAI_COMPATIBLE_API_KEY` when the endpoint requires one.

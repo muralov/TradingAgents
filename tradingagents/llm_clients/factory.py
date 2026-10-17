@@ -49,6 +49,10 @@ def create_llm_client(
         from .bedrock_client import BedrockClient
         return BedrockClient(model, base_url, **kwargs)
 
+    if provider_lower == "sap_ai_core":
+        from .sap_ai_core_client import SAPAICoreClient
+        return SAPAICoreClient(model, base_url, **kwargs)
+
     from .openai_client import OpenAIClient, is_openai_compatible
     if is_openai_compatible(provider_lower):
         return OpenAIClient(model, base_url, provider=provider_lower, **kwargs)
@@ -88,7 +92,7 @@ def _coerce_max_tokens(value):
 
 
 # Providers that take OpenAI's ``openai_reasoning_effort``.
-REASONING_EFFORT_PROVIDERS = ("openai", "chatgpt")
+REASONING_EFFORT_PROVIDERS = ("openai", "chatgpt", "sap_ai_core")
 
 
 def build_llm_kwargs(config: dict) -> dict[str, Any]:

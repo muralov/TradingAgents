@@ -403,6 +403,7 @@ def _llm_provider_table() -> list[tuple[str, str, str | None]]:
         ("NVIDIA NIM", "nvidia", "https://integrate.api.nvidia.com/v1"),
         ("Azure OpenAI", "azure", None),
         ("Amazon Bedrock", "bedrock", None),
+        ("SAP AI Core (Generative AI Hub)", "sap_ai_core", None),
         ("Ollama", "ollama", ollama_url),
         ("OpenAI-compatible (vLLM, LM Studio, llama.cpp, custom relay)", "openai_compatible", None),
     ]

@@ -221,6 +221,19 @@ MODEL_OPTIONS: ProviderModeOptions = {
     "nvidia": _CUSTOM_ONLY,
     # Bedrock model IDs / cross-region inference profile IDs are user-specified.
     "bedrock": _CUSTOM_ONLY,
+    # Availability depends on the user's SAP resource group and deployments.
+    "sap_ai_core": {
+        "quick": [
+            ("GPT-6.1 Sol (SAP deployment)", "gpt-6.1-sol"),
+            ("GPT-6 Astra (SAP deployment)", "gpt-6-astra"),
+            ("Custom model ID", "custom"),
+        ],
+        "deep": [
+            ("GPT-6.1 Sol (SAP deployment)", "gpt-6.1-sol"),
+            ("GPT-6 Astra (SAP deployment)", "gpt-6-astra"),
+            ("Custom model ID", "custom"),
+        ],
+    },
     # The plan's models are listed live from OpenAI once signed in.
     "chatgpt": _CUSTOM_ONLY,
 }

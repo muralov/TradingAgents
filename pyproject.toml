@@ -7,7 +7,7 @@ name = "tradingagents"
 dynamic = ["version"]
 description = "TradingAgents: Multi-Agents LLM Financial Trading Framework"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<4.0"
 dependencies = [
     "cryptography>=42.0",
     "langchain-core>=1.6.5",
@@ -24,11 +24,16 @@ dependencies = [
     "questionary>=2.1.0",
     "requests>=2.32.4",
     "rich>=14.0.0",
+    # SAP's LangChain package imports its Amazon wrappers even for OpenAI.
+    "sap-ai-sdk-gen[amazon]>=7.4.1,<8",
     "typer>=0.21.0",
     "stockstats>=0.6.5",
     "typing-extensions>=4.14.0",
     "yfinance>=1.7.0",
 ]
+
+[tool.poetry]
+package-mode = false
 
 [project.optional-dependencies]
 dev = [
@@ -41,6 +46,8 @@ dev = [
 bedrock = [
     "langchain-aws>=1.7.9",
 ]
+# Compatibility alias for existing installs using .[sap_ai_core]; included by default.
+sap_ai_core = []
 
 [project.scripts]
 tradingagents = "cli.main:app"
